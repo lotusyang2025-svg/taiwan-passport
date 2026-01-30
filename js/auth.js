@@ -1,7 +1,7 @@
 // 🔐 Authentication & Authorization
 
-// 小工具：帶逾時與重試的 getUser
-async function getUserWithRetry(maxAttempts = 3, timeoutMs = 5000, delayMs = 1500) {
+// 小工具：帶逾時與重試的 getUser（僅在無本地 session 時使用）
+async function getUserWithRetry(maxAttempts = 5, timeoutMs = 12000, delayMs = 2000) {
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       const result = await Promise.race([
@@ -38,8 +38,23 @@ async function getUserWithRetry(maxAttempts = 3, timeoutMs = 5000, delayMs = 150
 async function refreshAll() {
   console.log("🔄 Refreshing all data...");
   
-  // 使用「逾時 + 自動重試」版本的 getUser，避免永遠卡在 pending
-  const user = await getUserWithRetry();
+  // 先讀本地 session（快、不發網路請求），避免 getUser 逾時導致「已登入卻被當成未登入」
+  let user = null;
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session?.user) {
+      user = session.user;
+      console.log("✅ Using session from getSession()");
+    }
+  } catch (e) {
+    console.warn("getSession() failed:", e);
+  }
+  
+  // 沒有本地 session 時才呼叫 getUser（例如剛從 OAuth 回來、或跨裝置）
+  if (!user) {
+    user = await getUserWithRetry();
+  }
+  
   const authBtn = $("btnAuth");
 
   if (!user) {
@@ -58,48 +73,51 @@ async function refreshAll() {
 
   console.log("✅ User logged in:", user.email);
   
+  // 先更新按鈕與基本資訊，避免後續請求卡住時一直顯示 Loading
   authBtn.innerText = "Sign Out";
   authBtn.style.background = "#64748b";
   authBtn.onclick = async () => { 
     await sb.auth.signOut(); 
     location.reload(); 
   };
-
-  const { data: profile } = await sb.from("profiles")
-    .select("full_name")
-    .eq("id", user.id)
-    .maybeSingle();
-  
-  const userName = profile?.full_name || user.email?.split('@')[0] || 'User';
-
-  const { data: isAdmin } = await sb.rpc("is_admin");
-  const roleText = isAdmin ? "Admin" : "Student";
   const hours = new Date().getHours();
   const greeting = hours < 12 ? "Good Morning" : hours < 18 ? "Good Afternoon" : "Good Evening";
-  
-  $("userInfo").innerHTML = `${greeting},<br><b>${userName}</b><br><small>${user.email}</small><br><small style="color: #60a5fa; font-weight: 600;">Role: ${roleText}</small>`;
+  const quickName = user.email?.split('@')[0] || user.user_metadata?.full_name || 'User';
+  $("userInfo").innerHTML = `${greeting},<br><b>${quickName}</b><br><small>${user.email}</small><br><small style="color: #94a3b8;">載入中…</small>`;
+  $("userPanel").style.display = "block";
+  $("adminPanel").style.display = "none";
 
-  if (isAdmin) {
-    console.log("👨‍💼 Loading admin panel...");
-    $("adminPanel").style.display = "block";
-    $("userPanel").style.display = "none";
-    loadAdminData();
-  } else {
-    console.log("🎓 Loading student panel...");
-    $("adminPanel").style.display = "none";
-    $("userPanel").style.display = "block";
-    
-    // 按順序載入
-    await loadProfileData(user.id);
-    initProfileUI();
-    await loadPointEvents();
-    await initMissionList();
-    await initRewardList();
-    
-    // 🔧 重點：在最後處理 URL 參數（掃碼）
-    console.log("📱 Processing QR code parameters...");
-    await handleUrlParams(user.id);
-    
-    console.log("✅ All initialization complete");
+  try {
+    const { data: profile } = await sb.from("profiles")
+      .select("full_name")
+      .eq("id", user.id)
+      .maybeSingle();
+    const userName = profile?.full_name || quickName;
+
+    const { data: isAdmin } = await sb.rpc("is_admin");
+    const roleText = isAdmin ? "Admin" : "Student";
+    $("userInfo").innerHTML = `${greeting},<br><b>${userName}</b><br><small>${user.email}</small><br><small style="color: #60a5fa; font-weight: 600;">Role: ${roleText}</small>`;
+
+    if (isAdmin) {
+      console.log("👨‍💼 Loading admin panel...");
+      $("adminPanel").style.display = "block";
+      $("userPanel").style.display = "none";
+      loadAdminData();
+    } else {
+      console.log("🎓 Loading student panel...");
+      $("adminPanel").style.display = "none";
+      $("userPanel").style.display = "block";
+      await loadProfileData(user.id);
+      initProfileUI();
+      await loadPointEvents();
+      await initMissionList();
+      await initRewardList();
+      console.log("📱 Processing QR code parameters...");
+      await handleUrlParams(user.id);
+      console.log("✅ All initialization complete");
+    }
+  } catch (e) {
+    console.error("❌ Refresh data error:", e);
+    $("userInfo").innerHTML = `${greeting},<br><b>${quickName}</b><br><small>${user.email}</small><br><small style="color: #f97316;">載入部分資料失敗，請重新整理或稍後再試。</small>`;
   }
 }

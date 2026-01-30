@@ -10,7 +10,20 @@ async function loadProfileData(userId) {
       .eq("id", userId)
       .maybeSingle();
     
-    currentProfile = profile || { id: userId };
+    if (profile) {
+      currentProfile = profile;
+    } else {
+      // 尚無 profiles 列或讀取失敗：至少顯示登入帳號名稱（避免整頁空白）
+      let fallbackName = "User";
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (session?.user) {
+          const u = session.user;
+          fallbackName = u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "User";
+        }
+      } catch (_) {}
+      currentProfile = { id: userId, full_name: fallbackName };
+    }
     
     updateProfileCard();
     populateProfileForm();
@@ -19,6 +32,16 @@ async function loadProfileData(userId) {
     
   } catch (e) {
     console.error("❌ Failed to load profile:", e);
+    // 失敗時仍用登入資訊顯示名稱，避免整頁空白
+    try {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session?.user) {
+        const u = session.user;
+        const fallbackName = u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "User";
+        currentProfile = { id: userId, full_name: fallbackName };
+        updateProfileCard();
+      }
+    } catch (_) {}
   }
 }
 

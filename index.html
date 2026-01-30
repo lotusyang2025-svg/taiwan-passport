@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>TMU Career Passport - Digital Edition</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect fill='%23003049' width='32' height='32' rx='4'/><text x='16' y='22' font-size='18' text-anchor='middle' fill='white'>🛂</text></svg>" type="image/svg+xml">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="css/styles.css" />
@@ -112,12 +113,23 @@
       font-size: 14px;
       border-bottom: 1px solid #ffeeba;
     }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0,0,0,0);
+      white-space: nowrap;
+      border: 0;
+    }
   </style>
 </head>
 <body>
 
 <div id="browserNotice">
-  ⚠️ Built-in browser detected. Recommend clicking "..." at top right and select "Open with default browser" to maintain login state.
+  ⚠️ 若登入不穩定或一直顯示 LOADING：可能是 Chrome 隱私設定阻擋第三方網站狀態（如 Supabase）。請試用其他瀏覽器、或允許本網站 Cookie，並用「預設瀏覽器」開啟、暫時關閉廣告阻擋後再試。
 </div>
 
 <!-- 版號顯示 -->
@@ -261,8 +273,10 @@
     <div id="section-collect" class="section-content box bg-white p-5 rounded-xl shadow-sm mb-20" style="margin-top: 20px;">
       <h3 class="font-bold border-l-4 border-blue-900 pl-2 mb-4">🎯 任務申報 (集章)</h3>
       <div class="row" style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-        <input id="searchMission" type="text" placeholder="Search tasks..." style="flex: 1; min-width: 200px; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
-        <select id="selectMissionId" style="flex: 1; min-width: 200px; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;"><option value="">Loading...</option></select>
+        <label for="searchMission" class="sr-only">搜尋任務</label>
+        <input id="searchMission" type="text" placeholder="Search tasks..." aria-label="搜尋任務" style="flex: 1; min-width: 200px; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
+        <label for="selectMissionId" class="sr-only">選擇任務</label>
+        <select id="selectMissionId" aria-label="選擇任務" style="flex: 1; min-width: 200px; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;"><option value="">Loading...</option></select>
         <button id="btnApplyPoints" style="flex: 1; min-width: 120px; padding: 12px 24px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Claim Points</button>
       </div>
       <div id="outMissionStatus" style="font-size: 13px; padding: 12px; border-radius: 8px; background: #f8fafc; border-left: 3px solid #60a5fa; margin-top: 12px;">Latest: None</div>
@@ -277,8 +291,10 @@
     <div id="section-rewards" class="section-content box bg-white p-5 rounded-xl shadow-sm mb-20" style="margin-top: 20px;">
       <h3 class="font-bold border-l-4 border-blue-900 pl-2 mb-4">🎁 獎勵兌換</h3>
       <div class="row" style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-        <input id="searchReward" type="text" placeholder="Search rewards..." style="flex: 1; min-width: 200px; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
-        <select id="selectRewardId" style="flex: 1; min-width: 200px; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;"><option value="">Loading...</option></select>
+        <label for="searchReward" class="sr-only">搜尋獎勵</label>
+        <input id="searchReward" type="text" placeholder="Search rewards..." aria-label="搜尋獎勵" style="flex: 1; min-width: 200px; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
+        <label for="selectRewardId" class="sr-only">選擇獎勵</label>
+        <select id="selectRewardId" aria-label="選擇獎勵" style="flex: 1; min-width: 200px; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;"><option value="">Loading...</option></select>
         <button id="btnRedeem" style="flex: 1; min-width: 120px; padding: 12px 24px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Claim Reward</button>
       </div>
       <div id="outRedeem" style="font-size: 13px; padding: 12px; border-radius: 8px; background: #f8fafc; border-left: 3px solid #60a5fa; margin-top: 12px;">Latest: None</div>
@@ -310,22 +326,22 @@
         </div>
 
         <div>
-          <label style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Full Name *</b></label>
+          <label for="profileName" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Full Name *</b></label>
           <input id="profileName" type="text" placeholder="Wen Hsu" style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
         </div>
 
         <div>
-          <label style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Nationality</b></label>
+          <label for="profileNationality" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Nationality</b></label>
           <input id="profileNationality" type="text" placeholder="Taiwan" style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
         </div>
 
         <div>
-          <label style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Enrolled Year</b></label>
+          <label for="profileEnrolledYear" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Enrolled Year</b></label>
           <input id="profileEnrolledYear" type="number" placeholder="2024" style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
         </div>
 
         <div>
-          <label style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Degree</b></label>
+          <label for="profileDegree" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Degree</b></label>
           <select id="profileDegree" style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
             <option value="">Select Degree</option>
             <option value="B.S.">Bachelor (B.S.)</option>
@@ -335,32 +351,32 @@
         </div>
 
         <div>
-          <label style="display: block; font-weight: 600; margin-bottom: 4px;"><b>College</b></label>
+          <label for="profileCollege" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>College</b></label>
           <input id="profileCollege" type="text" placeholder="Medicine" style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
         </div>
 
         <div>
-          <label style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Program/Department</b></label>
+          <label for="profileProgram" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Program/Department</b></label>
           <input id="profileProgram" type="text" placeholder="IGPM" style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
         </div>
 
         <div>
-          <label style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Student ID</b></label>
+          <label for="profileStudentId" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Student ID</b></label>
           <input id="profileStudentId" type="text" placeholder="A123456789" style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
         </div>
 
         <div>
-          <label style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Phone</b></label>
+          <label for="profilePhone" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Phone</b></label>
           <input id="profilePhone" type="tel" placeholder="0912345678" style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
         </div>
 
         <div style="grid-column: 1 / -1;">
-          <label style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Address</b></label>
+          <label for="profileAddress" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Address</b></label>
           <input id="profileAddress" type="text" placeholder="Taipei City..." style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
         </div>
 
         <div style="grid-column: 1 / -1;">
-          <label style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Bio</b></label>
+          <label for="profileBio" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Bio</b></label>
           <textarea id="profileBio" placeholder="Tell us about yourself..." style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px; min-height: 100px; resize: vertical;"></textarea>
         </div>
       </div>

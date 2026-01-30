@@ -1,46 +1,67 @@
 // 🛡️ 管理員功能模組
+// 不 embed 關聯表，避免「more than one relationship」錯誤；只查本表，用 task_code / reward_id、user_id 顯示
 async function loadAdminData() {
   try {
     let { data: pts, error: pErr } = await sb.from("point_events")
-      .select("*, missions(title), profiles(email)")
-      .eq("status", "pending");
+      .select("id, user_id, mission_id, task_code, points, status, created_at")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
     
-    if (pErr && pErr.message.includes("relationship")) {
-      console.warn("點數表關聯異常，切換至基本模式");
-      let { data: basicPts } = await sb.from("point_events")
-        .select("*, missions(title)")
-        .eq("status", "pending");
-      pts = basicPts;
+    if (pErr) {
+      console.warn("待審核點數查詢異常:", pErr.message);
+      pts = null;
     }
     
     let h1 = "<b>⏳ 待核可點數：</b><table>";
     if (pts && pts.length > 0) {
-      pts.forEach(i => {
-        h1 += `<tr><td>${i.missions?.title || i.task_code}<br><small>${i.profiles?.email || '學生ID: ' + i.user_id.slice(0,8)}</small></td>
+      for (const i of pts) {
+        let taskLabel = i.task_code || i.mission_id || "—";
+        let userLabel = i.user_id ? i.user_id.slice(0, 8) + "…" : "—";
+        try {
+          const { data: mission } = await sb.from("missions").select("title").eq("id", i.mission_id).maybeSingle();
+          if (mission?.title) taskLabel = mission.title;
+        } catch (_) {}
+        try {
+          const { data: prof } = await sb.from("profiles").select("email").eq("id", i.user_id).maybeSingle();
+          if (prof?.email) userLabel = prof.email;
+        } catch (_) {}
+        h1 += `<tr><td>${taskLabel}<br><small>${userLabel}</small></td>
                <td><button onclick="approveP('${i.id}')">核可</button> <button onclick="rejectP('${i.id}')">退回</button></td></tr>`;
-      });
-    } else { h1 += "<tr><td colspan='2' style='text-align:center;'>目前無待審核點數</td></tr>"; }
+      }
+    } else {
+      h1 += "<tr><td colspan='2' style='text-align:center;'>目前無待審核點數</td></tr>";
+    }
     $("pendingPointsList").innerHTML = h1 + "</table>";
 
     let { data: rds, error: rErr } = await sb.from("redemptions")
-      .select("*, rewards(title), profiles(email)")
-      .eq("status", "pending");
+      .select("id, user_id, reward_id, status, created_at")
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
     
-    if (rErr && rErr.message.includes("relationship")) {
-      console.warn("獎勵表關聯異常，切換至基本模式");
-      let { data: basicRds } = await sb.from("redemptions")
-        .select("*, rewards(title)")
-        .eq("status", "pending");
-      rds = basicRds;
+    if (rErr) {
+      console.warn("待發放獎勵查詢異常:", rErr.message);
+      rds = null;
     }
 
     let h2 = "<b>🎁 待發放獎勵：</b><table>";
     if (rds && rds.length > 0) {
-      rds.forEach(i => {
-        h2 += `<tr><td>${i.rewards?.title || i.reward_id}<br><small>${i.profiles?.email || '學生ID: ' + i.user_id.slice(0,8)}</small></td>
+      for (const i of rds) {
+        let rewardLabel = i.reward_id || "—";
+        let userLabel = i.user_id ? i.user_id.slice(0, 8) + "…" : "—";
+        try {
+          const { data: reward } = await sb.from("rewards").select("title").eq("id", i.reward_id).maybeSingle();
+          if (reward?.title) rewardLabel = reward.title;
+        } catch (_) {}
+        try {
+          const { data: prof } = await sb.from("profiles").select("email").eq("id", i.user_id).maybeSingle();
+          if (prof?.email) userLabel = prof.email;
+        } catch (_) {}
+        h2 += `<tr><td>${rewardLabel}<br><small>${userLabel}</small></td>
                <td><button onclick="approveR('${i.id}')">發獎</button> <button onclick="rejectR('${i.id}')">退回</button></td></tr>`;
-      });
-    } else { h2 += "<tr><td colspan='2' style='text-align:center;'>目前無待領取獎勵</td></tr>"; }
+      }
+    } else {
+      h2 += "<tr><td colspan='2' style='text-align:center;'>目前無待領取獎勵</td></tr>";
+    }
     $("pendingList").innerHTML = h2 + "</table>";
 
   } catch (e) {

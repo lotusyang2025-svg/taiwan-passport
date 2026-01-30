@@ -25,16 +25,31 @@ async function initApp() {
     // 對 Supabase / 網路相關錯誤做友善提示
     if (e?.name === "AbortError") {
       console.error("❌ App initialization error: network request aborted (可能是瀏覽器擴充功能或網路環境阻擋 Supabase)", e);
-      const msg = "連線到 Supabase 被中斷，請檢查：\n1. 是否有阻擋請求的瀏覽器擴充功能（如隱私/廣告阻擋），可先停用再試一次。\n2. 目前的網路環境（公司/校園防火牆、VPN）是否禁止連線到 Supabase。";
-      if (typeof alert === "function") {
-        alert(msg);
-      }
       const userInfoEl = document.getElementById("userInfo");
+      const authBtn = document.getElementById("btnAuth");
       if (userInfoEl) {
-        userInfoEl.innerHTML = "<span style='color:#f97316;'>⚠️ 無法連線到認證服務，請檢查瀏覽器外掛或網路環境後重新整理頁面。</span>";
+        userInfoEl.innerHTML = "<span style='color:#f97316;'>⚠️ 無法連線到認證服務，請檢查瀏覽器外掛或網路環境。</span><br><small style='color:#64748b;'>可先試「重試連線」，或改用預設瀏覽器、關閉廣告阻擋後再試。</small>";
+      }
+      if (authBtn) {
+        authBtn.innerText = "重試連線";
+        authBtn.style.background = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
+        authBtn.onclick = function retryConnect() {
+          authBtn.innerText = "連線中…";
+          authBtn.onclick = null;
+          initApp();
+        };
       }
     } else {
       console.error("❌ App initialization error:", e);
+      const userInfoEl = document.getElementById("userInfo");
+      const authBtn = document.getElementById("btnAuth");
+      if (userInfoEl) {
+        userInfoEl.innerHTML = "<span style='color:#ef4444;'>⚠️ 初始化失敗，請重新整理頁面。</span>";
+      }
+      if (authBtn) {
+        authBtn.innerText = "重試連線";
+        authBtn.onclick = function () { location.reload(); };
+      }
     }
   }
 }
