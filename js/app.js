@@ -1,25 +1,22 @@
 // 🚀 App Main Entry Point
 
+let authStateReceived = false;
+
 async function initApp() {
   console.log("🚀 Initializing Taiwan Passport App...");
   
   try {
-    // 檢查瀏覽器
     checkBrowser();
-    
-    // 初始化版號
     initVersionDisplay();
     
-    // 檢查登入狀態
-    const { data: { session } } = await sb.auth.getSession();
-    
-    if (session) {
-      console.log("✅ User logged in:", session.user.email);
-      await refreshAll();
-    } else {
-      console.log("⚠️ No active session");
-      await refreshAll();
-    }
+    // 不主動呼叫 refreshAll()，改由 onAuthStateChange(INITIAL_SESSION) 觸發，getSession() 較易第一次就成功
+    // 若 12 秒內未收到 auth 事件則 fallback 呼叫一次，避免永遠卡在 Loading
+    setTimeout(() => {
+      if (!authStateReceived) {
+        console.warn("⚠️ onAuthStateChange 未觸發，改由 fallback 呼叫 refreshAll()");
+        refreshAll();
+      }
+    }, 12000);
     
   } catch (e) {
     // 對 Supabase / 網路相關錯誤做友善提示
@@ -28,13 +25,13 @@ async function initApp() {
       const userInfoEl = document.getElementById("userInfo");
       const authBtn = document.getElementById("btnAuth");
       if (userInfoEl) {
-        userInfoEl.innerHTML = "<span style='color:#f97316;'>⚠️ 無法連線到認證服務，請檢查瀏覽器外掛或網路環境。</span><br><small style='color:#64748b;'>可先試「重試連線」，或改用預設瀏覽器、關閉廣告阻擋後再試。</small>";
+        userInfoEl.innerHTML = "<span style='color:#f97316;'>⚠️ Cannot connect to auth service. Check browser extensions or network.</span><br><small style='color:#64748b;'>Try \"Retry\" or use default browser and disable ad blockers.</small>";
       }
       if (authBtn) {
-        authBtn.innerText = "重試連線";
+        authBtn.innerText = "Retry";
         authBtn.style.background = "linear-gradient(135deg, #f59e0b 0%, #d97706 100%)";
         authBtn.onclick = function retryConnect() {
-          authBtn.innerText = "連線中…";
+          authBtn.innerText = "Connecting…";
           authBtn.onclick = null;
           initApp();
         };
@@ -44,20 +41,21 @@ async function initApp() {
       const userInfoEl = document.getElementById("userInfo");
       const authBtn = document.getElementById("btnAuth");
       if (userInfoEl) {
-        userInfoEl.innerHTML = "<span style='color:#ef4444;'>⚠️ 初始化失敗，請重新整理頁面。</span>";
+        userInfoEl.innerHTML = "<span style='color:#ef4444;'>⚠️ Init failed. Please refresh the page.</span>";
       }
       if (authBtn) {
-        authBtn.innerText = "重試連線";
+        authBtn.innerText = "Retry";
         authBtn.onclick = function () { location.reload(); };
       }
     }
   }
 }
 
-// 監聽認證狀態變化
+// 監聽認證狀態變化；「只」在 INITIAL_SESSION 時才 refreshAll()，避免 SIGNED_IN 時 session 尚未還原導致 4 次 getSession 逾時
 sb.auth.onAuthStateChange(async (event, session) => {
   console.log("🔐 Auth state changed:", event);
-  if (session) {
+  authStateReceived = true;
+  if (event === "INITIAL_SESSION") {
     await refreshAll();
   }
 });

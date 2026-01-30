@@ -119,8 +119,7 @@ async function handleUrlParams(userId) {
     
     console.log(`✅ Successfully claimed: ${mission.title} (+${mission.points} pt)`);
     $("outMissionStatus").innerHTML = `<b style="color: #10b981;">✅ Auto-claimed:</b> ${mission.title} <span class="status-processing">(+${mission.points} pt)</span>`;
-    
-    // 重新載入
+    if (typeof showStampToast === "function") showStampToast(mission.title, mission.points);
     await loadPointEvents();
     
   } catch (e) {
@@ -131,25 +130,39 @@ async function handleUrlParams(userId) {
 
 $("btnApplyPoints").onclick = async () => {
   const mid = $("selectMissionId").value;
-  const { data: { user } } = await sb.auth.getUser();
-  
-  const { data: existing } = await sb.from("point_events")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("mission_id", mid)
-    .eq("status", "pending")
-    .maybeSingle();
-  
-  if (existing) return alert("⚠️ Already claimed this task!");
-  
-  await sb.from("point_events").insert([
-    { user_id: user.id, mission_id: mid, points: 0, status: 'pending' }
-  ]);
-  
-  alert("✅ Task claim submitted!");
-  
-  const selectedMission = allMissions.find(m => m.id === mid);
-  $("outMissionStatus").innerHTML = `<b>Latest:</b> ${selectedMission ? selectedMission.title : mid} <span class="status-processing">⏳ Processing</span>`;
-  
-  refreshAll();
+  if (!mid) return;
+  const btn = $("btnApplyPoints");
+  const originalText = btn.innerText;
+  btn.disabled = true;
+  btn.innerText = "Claiming…";
+
+  try {
+    const { data: { user } } = await sb.auth.getUser();
+    const { data: existing } = await sb.from("point_events")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("mission_id", mid)
+      .eq("status", "pending")
+      .maybeSingle();
+
+    if (existing) {
+      if (typeof showAlert === "function") showAlert("⚠️ Already claimed this task!");
+      return;
+    }
+
+    await sb.from("point_events").insert([
+      { user_id: user.id, mission_id: mid, points: 0, status: "pending" }
+    ]);
+
+    const selectedMission = allMissions.find(m => m.id === mid);
+    $("outMissionStatus").innerHTML = `<b>Latest:</b> ${selectedMission ? selectedMission.title : mid} <span class="status-processing">⏳ Processing</span>`;
+    if (typeof showStampToast === "function") showStampToast(selectedMission ? selectedMission.title : mid, selectedMission ? selectedMission.points : null);
+    refreshAll();
+  } catch (e) {
+    console.error("Claim error:", e);
+    if (typeof showAlert === "function") showAlert("Failed to submit. Please try again.");
+  } finally {
+    btn.disabled = false;
+    btn.innerText = originalText;
+  }
 };

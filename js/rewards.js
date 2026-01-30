@@ -2,6 +2,8 @@
 let currentProfile = null;
 // 📊 全域累計點數（給獎勵門檻判斷用，預設為 0）
 let currentTotalPoints = 0;
+// 上一次等級（用於升級慶祝，僅在真正升級時觸發）
+let lastRankLabel = null;
 
 async function loadProfileData(userId) {
   try {
@@ -107,7 +109,7 @@ function updateProfileCard() {
     if (currentProfile.photo_url) {
       $("profileCardPhoto").innerHTML = `<img src="${currentProfile.photo_url}" style="width:100%; height:100%; object-fit:cover;">`;
     } else {
-      $("profileCardPhoto").innerHTML = '<span class="text-xs text-slate-400">PHOTO</span>';
+      $("profileCardPhoto").innerHTML = '<span class="photo-placeholder">PHOTO</span>';
     }
   }
   
@@ -132,7 +134,7 @@ function updateProfileCard() {
     if (currentProfile.bio) {
       $("bioContent").innerHTML = currentProfile.bio.replace(/\n/g, '<br>');
     } else {
-      $("bioContent").innerHTML = '尚未填寫個人簡介';
+      $("bioContent").innerHTML = 'No bio yet.';
     }
   }
 
@@ -461,13 +463,18 @@ async function loadPointEvents() {
         $("totalPoints").innerText = currentTotalPoints + " PT";
       }
       
-      // 更新等級標籤
+      // 更新等級標籤，並在升級時顯示慶祝 Toast
       if ($("rankTag")) {
         let rank = "Bronze Member";
         if (currentTotalPoints >= 1000) rank = "Platinum Member";
         else if (currentTotalPoints >= 500) rank = "Gold Member";
         else if (currentTotalPoints >= 200) rank = "Silver Member";
         $("rankTag").innerText = rank;
+        const rankOrder = { "Bronze Member": 0, "Silver Member": 1, "Gold Member": 2, "Platinum Member": 3 };
+        if (lastRankLabel !== null && (rankOrder[rank] || 0) > (rankOrder[lastRankLabel] || 0) && typeof showLevelUpToast === "function") {
+          showLevelUpToast(rank);
+        }
+        lastRankLabel = rank;
       }
       
       // 更新詳細點數顯示（記錄頁面）
@@ -476,22 +483,23 @@ async function loadPointEvents() {
           `<div><div>${currentTotalPoints} pt</div><small>Points Accumulated</small></div>`;
       }
       
-      // 更新集章頁面的最近記錄
+      // 更新集章頁面的最近記錄（最新一筆加 log-item-newest 進場動畫）
       if ($("logList")) {
         const recentLogs = pts.slice(0, 5);
         if (recentLogs.length > 0) {
-          $("logList").innerHTML = recentLogs.map(l => {
+          $("logList").innerHTML = recentLogs.map((l, idx) => {
             const statusClass = l.status === 'approved' ? 'text-green-600' : 
                                l.status === 'rejected' ? 'text-red-600' : 'text-orange-500';
             const statusText = l.status === 'approved' ? '✅' : 
                               l.status === 'rejected' ? '❌' : '⏳';
-            return `<div class="flex justify-between border-b pb-1">
-              <span>${l.missions?.title || l.task_code || '未知任務'}</span>
+            const newestClass = idx === 0 ? ' log-item-newest' : '';
+            return `<div class="log-item flex justify-between border-b pb-1${newestClass}">
+              <span>${l.missions?.title || l.task_code || 'Unknown mission'}</span>
               <span class="font-bold ${statusClass}">${statusText} ${l.points || 0}pt</span>
             </div>`;
           }).join('');
         } else {
-          $("logList").innerHTML = '<div class="text-gray-400">尚無紀錄</div>';
+          $("logList").innerHTML = '<div class="text-gray-400">No records yet</div>';
         }
       }
       
@@ -537,53 +545,65 @@ async function loadPointEvents() {
 // Claim Task Points
 $("btnApplyPoints").onclick = async () => {
   const mid = $("selectMissionId").value;
-  
   if (!mid) {
-    alert("⚠️ Please select a task");
+    if (typeof showAlert === "function") showAlert("⚠️ Please select a task");
     return;
   }
-  
-  const { data: { user } } = await sb.auth.getUser();
-  
+  const btn = $("btnApplyPoints");
+  const originalText = btn.innerText;
+  btn.disabled = true;
+  btn.innerText = "Claiming…";
+  const minLoadingMs = 500;
+  const loadingStart = Date.now();
+
   try {
+    const { data: { user } } = await sb.auth.getUser();
     const { data: existing } = await sb.from("point_events")
       .select("id")
       .eq("user_id", user.id)
       .eq("mission_id", mid)
       .in("status", ["pending", "approved"])
       .maybeSingle();
-    
+
     if (existing) {
-      alert("⚠️ You have already claimed this task!");
+      btn.disabled = false;
+      btn.innerText = originalText;
+      if (typeof showAlert === "function") showAlert("⚠️ You have already claimed this task!");
       return;
     }
-    
-    const selectedMission = allMissions.find(m => m.id === mid);
-    
+
+    const selectedMission = typeof allMissions !== "undefined" ? allMissions.find(m => m.id === mid) : null;
     const { error } = await sb.from("point_events").insert([
-      { 
-        user_id: user.id, 
-        mission_id: mid, 
-        points: selectedMission?.points || 0, 
-        status: 'pending',
+      {
+        user_id: user.id,
+        mission_id: mid,
+        points: selectedMission?.points || 0,
+        status: "pending",
         task_code: selectedMission?.code || mid
       }
     ]);
-    
+
     if (error) {
-      alert(`❌ Claim failed: ${error.message}`);
+      btn.disabled = false;
+      btn.innerText = originalText;
+      if (typeof showAlert === "function") showAlert(`❌ Claim failed: ${error.message}`);
       return;
     }
-    
-    alert("✅ Task claim submitted!");
+
     $("outMissionStatus").innerHTML = `<b>Latest:</b> ${selectedMission ? selectedMission.title : mid} <span class="status-processing">⏳ Processing</span>`;
-    
+    if (typeof showStampToast === "function") showStampToast(selectedMission ? selectedMission.title : mid, selectedMission ? selectedMission.points : null);
     await loadPointEvents();
     await refreshAll();
-    
   } catch (e) {
     console.error("Error:", e);
-    alert(`❌ System error: ${e.message}`);
+    if (typeof showAlert === "function") showAlert(`❌ System error: ${e.message}`);
+  } finally {
+    const elapsed = Date.now() - loadingStart;
+    const wait = Math.max(0, minLoadingMs - elapsed);
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.innerText = originalText;
+    }, wait);
   }
 };
 
@@ -627,13 +647,12 @@ $("btnRedeem").onclick = async () => {
     ]);
     
     if (error) {
-      alert(`❌ Claim failed: ${error.message}`);
+      if (typeof showAlert === "function") showAlert(`❌ Claim failed: ${error.message}`);
       return;
     }
-    
-    alert("✅ Reward claim submitted!");
+
     $("outRedeem").innerHTML = `<b>Latest:</b> ${selectedReward.title} <span class="status-processing">⏳ Processing</span>`;
-    
+    if (typeof showRewardToast === "function") showRewardToast(selectedReward.title);
     await loadPointEvents();
     await refreshAll();
     

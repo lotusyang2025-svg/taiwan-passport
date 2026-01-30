@@ -9,17 +9,21 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="css/styles.css" />
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap');
-    body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+      background-color: #0f172a;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
     
     .passport-card {
-      background: white;
+      background: rgba(30, 41, 59, 0.6);
       border-radius: 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
       overflow: hidden;
       max-width: 450px;
       margin: 20px auto;
-      border: 1px solid #e5e7eb;
+      border: 1px solid #334155;
     }
     .passport-header {
       background: #003049;
@@ -32,39 +36,41 @@
     .profile-section {
       display: flex;
       padding: 20px;
-      border-bottom: 2px dashed #cbd5e1;
+      border-bottom: 2px dashed #475569;
       position: relative;
     }
     .photo-box {
       width: 100px;
       height: 130px;
-      background: #e2e8f0;
-      border: 2px solid #94a3b8;
+      background: rgba(51, 65, 85, 0.8);
+      border: 2px solid #475569;
       display: flex;
       align-items: center;
       justify-content: center;
       margin-right: 20px;
       overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
     }
     .photo-box img {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
+    .photo-placeholder { font-size: 0.75rem; color: #94a3b8; }
     .stamp {
       position: absolute;
       right: 20px;
       top: 10px;
       width: 80px;
       height: 80px;
-      border: 3px solid rgba(0, 48, 73, 0.6);
+      border: 3px solid #64748b;
       border-radius: 50%;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       font-size: 8px;
-      color: rgba(0, 48, 73, 0.6);
+      color: #94a3b8;
       transform: rotate(15deg);
       text-align: center;
       line-height: 1;
@@ -73,12 +79,30 @@
       display: flex;
       justify-content: space-between;
       margin-bottom: 8px;
-      border-bottom: 1px solid #f1f5f9;
+      border-bottom: 1px solid #475569;
       padding-bottom: 4px;
     }
-    .info-label { color: #64748b; font-size: 0.75rem; width: 80px; }
-    .info-value { color: #0f172a; font-size: 0.85rem; font-weight: 500; text-align: right; }
-    
+    .passport-card .info-label { color: #94a3b8; font-size: 0.75rem; width: 80px; }
+    .passport-card .info-value { color: #e2e8f0; font-size: 0.85rem; font-weight: 500; text-align: right; }
+    .passport-detail-block {
+      padding: 20px;
+      background: rgba(51, 65, 85, 0.5);
+      border-bottom: 1px solid #334155;
+    }
+    .passport-points-block {
+      padding: 20px;
+      text-align: center;
+      background: rgba(51, 65, 85, 0.6);
+      border-top: 1px solid #334155;
+      border-bottom: 1px solid #334155;
+    }
+    .passport-points-block .text-slate-500 { color: #94a3b8 !important; }
+    .passport-card #totalPoints { color: #34d399 !important; }
+    .passport-card #rankTag {
+      background: rgba(251, 191, 36, 0.2) !important;
+      color: #fbbf24 !important;
+      border: 1px solid #475569;
+    }
     .module-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -86,22 +110,83 @@
       padding: 20px;
     }
     .module-btn {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
+      background: rgba(51, 65, 85, 0.8);
+      border: 1px solid #475569;
       padding: 15px;
       border-radius: 12px;
       text-align: center;
-      transition: 0.2s;
+      transition: background 0.2s, border-color 0.2s;
       cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      user-select: none;
+      outline: none !important;
+      box-shadow: none !important;
+      color: #e2e8f0;
     }
-    .module-btn:hover { background: #eff6ff; border-color: #3b82f6; }
-    .module-btn.active { background: #dbeafe; border-color: #3b82f6; border-width: 2px; }
+    .module-btn:hover { background: rgba(71, 85, 105, 0.9); border-color: #64748b; }
+    .module-btn:focus,
+    .module-btn:active {
+      background: rgba(51, 65, 85, 0.9);
+      border-color: #64748b;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+    .module-btn:active { opacity: 0.9; }
+    .module-btn.active {
+      background: rgba(71, 85, 105, 0.9);
+      border-color: #64748b;
+      border-width: 1px;
+      color: #f1f5f9;
+    }
     
     .section-content {
       display: none;
     }
     .section-content.active {
       display: block;
+    }
+    
+    /* 區塊標題左側直條：固定淺灰，避免不同畫面／focus 時出現藍/白差異 */
+    .section-content .section-title,
+    .section-content h3.font-bold.border-l-4 {
+      border-left-color: #94a3b8 !important;
+      -webkit-tap-highlight-color: transparent;
+      outline: none;
+    }
+    .section-content .section-title:focus,
+    .section-content h3.font-bold.border-l-4:focus {
+      outline: none !important;
+      box-shadow: none !important;
+    }
+    /* 個人資訊照片框：固定淺灰邊框，避免點擊時變色 */
+    .profile-photo-box {
+      width: 120px;
+      height: 120px;
+      background: #e2e8f0;
+      border-radius: 12px;
+      border: 2px solid #cbd5e1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 48px;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* 避免手機點擊白底區塊／輸入框時邊框變深 */
+    .section-content.box,
+    .section-content input,
+    .section-content select,
+    .section-content textarea {
+      -webkit-tap-highlight-color: transparent;
+    }
+    .section-content input:focus,
+    .section-content select:focus,
+    .section-content textarea:focus {
+      outline: none;
+      border-color: #cbd5e1;
+      box-shadow: 0 0 0 1px #cbd5e1;
     }
     
     #browserNotice {
@@ -128,8 +213,14 @@
 </head>
 <body>
 
+<!-- Toast: stamp / level-up / reward celebration -->
+<div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true" style="display: none;">
+  <span class="toast-icon" id="toastIcon">📌</span>
+  <span class="toast-message" id="toastMessage"></span>
+</div>
+
 <div id="browserNotice">
-  ⚠️ 若登入不穩定或一直顯示 LOADING：可能是 Chrome 隱私設定阻擋第三方網站狀態（如 Supabase）。請試用其他瀏覽器、或允許本網站 Cookie，並用「預設瀏覽器」開啟、暫時關閉廣告阻擋後再試。
+  ⚠️ If login is unstable or stuck on LOADING: your browser may be blocking third-party storage (e.g. Supabase). Try another browser, allow cookies, use the default browser, or disable ad blockers.
 </div>
 
 <!-- 版號顯示 -->
@@ -154,7 +245,7 @@
       
       <div class="profile-section">
         <div class="photo-box" id="profileCardPhoto">
-          <span class="text-xs text-slate-400">PHOTO</span>
+          <span class="photo-placeholder">PHOTO</span>
         </div>
         <div class="flex-1">
           <div class="stamp">
@@ -176,7 +267,7 @@
         </div>
       </div>
 
-      <div class="p-5 bg-slate-50">
+      <div class="passport-detail-block">
         <div class="info-row"><div class="info-label">Degree</div><div class="info-value" id="p_degree">-</div></div>
         <div class="info-row"><div class="info-label">College</div><div class="info-value" id="p_college">-</div></div>
         <div class="info-row"><div class="info-label">Program</div><div class="info-value" id="p_program">-</div></div>
@@ -185,48 +276,52 @@
       </div>
 
       <!-- 積分顯示 -->
-      <div class="p-5 text-center bg-white border-t border-b">
+      <div class="passport-points-block">
         <div class="text-slate-500 text-xs uppercase tracking-widest">Points Accumulated</div>
-        <div class="text-4xl font-bold text-blue-900 my-1" id="totalPoints">0 PT</div>
-        <div class="inline-block px-3 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold" id="rankTag">Bronze Member</div>
+        <div class="text-4xl font-bold my-1" id="totalPoints">0 PT</div>
+        <div class="inline-block px-3 py-1 rounded-full text-xs font-bold" id="rankTag">Bronze Member</div>
       </div>
 
       <!-- 六大模組導覽 -->
       <div class="module-grid">
         <div class="module-btn active" onclick="showSection('info')">
           <div class="text-xl">ℹ️</div>
-          <div class="text-xs font-bold mt-1">資訊頁</div>
+          <div class="text-xs font-bold mt-1">Info</div>
         </div>
         <div class="module-btn" onclick="showSection('collect')">
           <div class="text-xl">📌</div>
-          <div class="text-xs font-bold mt-1">集章頁</div>
+          <div class="text-xs font-bold mt-1">Stamps</div>
         </div>
         <div class="module-btn" onclick="showSection('rewards')">
           <div class="text-xl">🏆</div>
-          <div class="text-xs font-bold mt-1">獎勵兌換</div>
+          <div class="text-xs font-bold mt-1">Rewards</div>
         </div>
         <div class="module-btn" onclick="showSection('records')">
           <div class="text-xl">📊</div>
-          <div class="text-xs font-bold mt-1">記錄查詢</div>
+          <div class="text-xs font-bold mt-1">Records</div>
         </div>
         <div class="module-btn" onclick="showSection('edit')">
           <div class="text-xl">✏️</div>
-          <div class="text-xs font-bold mt-1">編輯資料</div>
+          <div class="text-xs font-bold mt-1">Edit Profile</div>
         </div>
         <div class="module-btn" onclick="showSection('bio')">
           <div class="text-xl">📝</div>
-          <div class="text-xs font-bold mt-1">個人簡介</div>
+          <div class="text-xs font-bold mt-1">Bio</div>
+        </div>
+        <div class="module-btn" onclick="showSection('leaderboard')">
+          <div class="text-xl">🏅</div>
+          <div class="text-xs font-bold mt-1">Leaderboard</div>
         </div>
       </div>
     </div>
 
     <!-- 資訊頁 -->
-    <div id="section-info" class="section-content active box bg-white p-5 rounded-xl shadow-sm mb-20" style="margin-top: 20px;">
-      <h3 class="font-bold border-l-4 border-blue-900 pl-2 mb-4">ℹ️ 個人資訊</h3>
+    <div id="section-info" class="section-content active box p-5 rounded-xl shadow-sm mb-20" style="margin-top: 20px;">
+      <h3 class="section-title font-bold border-l-4 pl-2 mb-4">ℹ️ Personal Info</h3>
       <div id="profileCardContainer">
         <div style="display: grid; grid-template-columns: 120px 1fr; gap: 20px; align-items: start;">
           <div style="text-align: center;">
-            <div id="profileCardPhotoDetail" style="width: 120px; height: 120px; background: #e2e8f0; border-radius: 12px; border: 3px solid #60a5fa; display: flex; align-items: center; justify-content: center; font-size: 48px; overflow: hidden;">📷</div>
+            <div id="profileCardPhotoDetail" class="profile-photo-box">📷</div>
           </div>
           <div>
             <h3 id="profileCardName" style="font-size: 24px; font-weight: 700; margin-bottom: 16px;">Not Filled</h3>
@@ -270,40 +365,40 @@
     </div>
 
     <!-- 集章頁 -->
-    <div id="section-collect" class="section-content box bg-white p-5 rounded-xl shadow-sm mb-20" style="margin-top: 20px;">
-      <h3 class="font-bold border-l-4 border-blue-900 pl-2 mb-4">🎯 任務申報 (集章)</h3>
+    <div id="section-collect" class="section-content box p-5 rounded-xl shadow-sm mb-20" style="margin-top: 20px;">
+      <h3 class="section-title font-bold border-l-4 pl-2 mb-4">🎯 Mission Claims (Stamps)</h3>
       <div class="row" style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-        <label for="searchMission" class="sr-only">搜尋任務</label>
-        <input id="searchMission" type="text" placeholder="Search tasks..." aria-label="搜尋任務" style="flex: 1; min-width: 200px; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
-        <label for="selectMissionId" class="sr-only">選擇任務</label>
-        <select id="selectMissionId" aria-label="選擇任務" style="flex: 1; min-width: 200px; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;"><option value="">Loading...</option></select>
+        <label for="searchMission" class="sr-only">Search missions</label>
+        <input id="searchMission" type="text" placeholder="Search tasks..." aria-label="Search missions" class="section-input" style="flex: 1; min-width: 200px; padding: 12px 16px; border-radius: 8px;">
+        <label for="selectMissionId" class="sr-only">Select mission</label>
+        <select id="selectMissionId" aria-label="Select mission" class="section-input" style="flex: 1; min-width: 200px; padding: 12px 16px; border-radius: 8px;"><option value="">Loading...</option></select>
         <button id="btnApplyPoints" style="flex: 1; min-width: 120px; padding: 12px 24px; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Claim Points</button>
       </div>
-      <div id="outMissionStatus" style="font-size: 13px; padding: 12px; border-radius: 8px; background: #f8fafc; border-left: 3px solid #60a5fa; margin-top: 12px;">Latest: None</div>
+      <div id="outMissionStatus" class="status-box">Latest: None</div>
       
       <div class="mt-6">
-        <h4 class="text-xs font-bold text-slate-400 uppercase mb-2">最近 5 筆紀錄</h4>
-        <div id="logList" class="text-sm space-y-2">載入中...</div>
+        <h4 class="text-xs font-bold text-slate-400 uppercase mb-2">Last 5 records</h4>
+        <div id="logList" class="text-sm space-y-2">Loading...</div>
       </div>
     </div>
 
     <!-- 獎勵兌換 -->
-    <div id="section-rewards" class="section-content box bg-white p-5 rounded-xl shadow-sm mb-20" style="margin-top: 20px;">
-      <h3 class="font-bold border-l-4 border-blue-900 pl-2 mb-4">🎁 獎勵兌換</h3>
+    <div id="section-rewards" class="section-content box p-5 rounded-xl shadow-sm mb-20" style="margin-top: 20px;">
+      <h3 class="section-title font-bold border-l-4 pl-2 mb-4">🎁 Rewards</h3>
       <div class="row" style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
-        <label for="searchReward" class="sr-only">搜尋獎勵</label>
-        <input id="searchReward" type="text" placeholder="Search rewards..." aria-label="搜尋獎勵" style="flex: 1; min-width: 200px; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
-        <label for="selectRewardId" class="sr-only">選擇獎勵</label>
-        <select id="selectRewardId" aria-label="選擇獎勵" style="flex: 1; min-width: 200px; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;"><option value="">Loading...</option></select>
+        <label for="searchReward" class="sr-only">Search rewards</label>
+        <input id="searchReward" type="text" placeholder="Search rewards..." aria-label="Search rewards" class="section-input" style="flex: 1; min-width: 200px; padding: 12px 16px; border-radius: 8px;">
+        <label for="selectRewardId" class="sr-only">Select reward</label>
+        <select id="selectRewardId" aria-label="Select reward" class="section-input" style="flex: 1; min-width: 200px; padding: 12px 16px; border-radius: 8px;"><option value="">Loading...</option></select>
         <button id="btnRedeem" style="flex: 1; min-width: 120px; padding: 12px 24px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Claim Reward</button>
       </div>
-      <div id="outRedeem" style="font-size: 13px; padding: 12px; border-radius: 8px; background: #f8fafc; border-left: 3px solid #60a5fa; margin-top: 12px;">Latest: None</div>
+      <div id="outRedeem" class="status-box">Latest: None</div>
     </div>
 
     <!-- 記錄查詢 -->
-    <div id="section-records" class="section-content box bg-white p-5 rounded-xl shadow-sm mb-20" style="margin-top: 20px;">
-      <h3 class="font-bold border-l-4 border-blue-900 pl-2 mb-4">📊 點數記錄</h3>
-      <div id="totalPointsDisplay" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(6, 182, 212, 0.1) 100%); padding: 24px; border-radius: 12px; text-align: center; border: 1px solid #10b981; margin-bottom: 24px;">
+    <div id="section-records" class="section-content box p-5 rounded-xl shadow-sm mb-20" style="margin-top: 20px;">
+      <h3 class="section-title font-bold border-l-4 pl-2 mb-4">📊 Point Records</h3>
+      <div id="totalPointsDisplay">
         <div style="font-size: 48px; font-weight: 700; color: #10b981; letter-spacing: -1px;">0 pt</div>
         <small style="font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">Points Accumulated</small>
       </div>
@@ -311,38 +406,38 @@
     </div>
 
     <!-- 編輯資料 -->
-    <div id="section-edit" class="section-content box bg-white p-5 rounded-xl shadow-sm mb-20" style="margin-top: 20px;">
-      <h3 class="font-bold border-l-4 border-blue-900 pl-2 mb-4">✏️ 編輯個人資料</h3>
+    <div id="section-edit" class="section-content box p-5 rounded-xl shadow-sm mb-20" style="margin-top: 20px;">
+      <h3 class="section-title font-bold border-l-4 pl-2 mb-4">✏️ Edit Profile</h3>
       
-      <div style="display: grid; grid-template-columns: 100px 1fr; gap: 15px 20px; align-items: start;">
-        <div style="grid-column: 1; grid-row: 1 / 4; text-align: center;">
-          <div id="profilePhotoPreview" style="width: 100px; height: 100px; background: #e0e0e0; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #999; font-size: 12px; overflow: hidden;">
+      <div class="edit-form">
+        <div class="edit-form-photo">
+          <div id="profilePhotoPreview" style="width: 100px; height: 100px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; overflow: hidden; margin: 0 auto;">
             📷
           </div>
           <input id="profilePhoto" type="file" accept="image/*" style="display: none;">
-          <label for="profilePhoto" style="display: block; margin-top: 12px; padding: 8px 12px; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border-radius: 6px; text-align: center; cursor: pointer; font-weight: 600; font-size: 12px; transition: all 0.2s ease;">
+          <label for="profilePhoto" class="btn-choose-photo">
             📁 Choose Photo
           </label>
         </div>
 
-        <div>
-          <label for="profileName" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Full Name *</b></label>
-          <input id="profileName" type="text" placeholder="Wen Hsu" style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
+        <div class="edit-form-field">
+          <label for="profileName"><b>Full Name *</b></label>
+          <input id="profileName" type="text" placeholder="Wen Hsu">
         </div>
 
-        <div>
-          <label for="profileNationality" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Nationality</b></label>
-          <input id="profileNationality" type="text" placeholder="Taiwan" style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
+        <div class="edit-form-field">
+          <label for="profileNationality"><b>Nationality</b></label>
+          <input id="profileNationality" type="text" placeholder="Taiwan">
         </div>
 
-        <div>
-          <label for="profileEnrolledYear" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Enrolled Year</b></label>
-          <input id="profileEnrolledYear" type="number" placeholder="2024" style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
+        <div class="edit-form-field">
+          <label for="profileEnrolledYear"><b>Enrolled Year</b></label>
+          <input id="profileEnrolledYear" type="number" placeholder="2024">
         </div>
 
-        <div>
-          <label for="profileDegree" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Degree</b></label>
-          <select id="profileDegree" style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
+        <div class="edit-form-field">
+          <label for="profileDegree"><b>Degree</b></label>
+          <select id="profileDegree">
             <option value="">Select Degree</option>
             <option value="B.S.">Bachelor (B.S.)</option>
             <option value="M.S.">Master (M.S.)</option>
@@ -350,34 +445,34 @@
           </select>
         </div>
 
-        <div>
-          <label for="profileCollege" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>College</b></label>
-          <input id="profileCollege" type="text" placeholder="Medicine" style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
+        <div class="edit-form-field">
+          <label for="profileCollege"><b>College</b></label>
+          <input id="profileCollege" type="text" placeholder="Medicine">
         </div>
 
-        <div>
-          <label for="profileProgram" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Program/Department</b></label>
-          <input id="profileProgram" type="text" placeholder="IGPM" style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
+        <div class="edit-form-field">
+          <label for="profileProgram"><b>Program/Department</b></label>
+          <input id="profileProgram" type="text" placeholder="IGPM">
         </div>
 
-        <div>
-          <label for="profileStudentId" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Student ID</b></label>
-          <input id="profileStudentId" type="text" placeholder="A123456789" style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
+        <div class="edit-form-field">
+          <label for="profileStudentId"><b>Student ID</b></label>
+          <input id="profileStudentId" type="text" placeholder="A123456789">
         </div>
 
-        <div>
-          <label for="profilePhone" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Phone</b></label>
-          <input id="profilePhone" type="tel" placeholder="0912345678" style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
+        <div class="edit-form-field">
+          <label for="profilePhone"><b>Phone</b></label>
+          <input id="profilePhone" type="tel" placeholder="0912345678">
         </div>
 
-        <div style="grid-column: 1 / -1;">
-          <label for="profileAddress" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Address</b></label>
-          <input id="profileAddress" type="text" placeholder="Taipei City..." style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px;">
+        <div class="edit-form-field">
+          <label for="profileAddress"><b>Address</b></label>
+          <input id="profileAddress" type="text" placeholder="Taipei City...">
         </div>
 
-        <div style="grid-column: 1 / -1;">
-          <label for="profileBio" style="display: block; font-weight: 600; margin-bottom: 4px;"><b>Bio</b></label>
-          <textarea id="profileBio" placeholder="Tell us about yourself..." style="width: 100%; padding: 12px 16px; border: 1px solid #e5e7eb; border-radius: 8px; min-height: 100px; resize: vertical;"></textarea>
+        <div class="edit-form-field">
+          <label for="profileBio"><b>Bio</b></label>
+          <textarea id="profileBio" placeholder="Tell us about yourself..." style="min-height: 100px; resize: vertical;"></textarea>
         </div>
       </div>
 
@@ -386,22 +481,39 @@
         <button id="btnCancelProfile" style="flex: 1; padding: 12px 24px; background: #64748b; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">❌ Cancel</button>
       </div>
 
-      <div id="profileMessage" style="margin-top: 12px; font-size: 13px; text-align: center;"></div>
+      <div id="profileMessage" class="status-box" style="margin-top: 12px; text-align: center;"></div>
     </div>
 
     <!-- 個人簡介 -->
-    <div id="section-bio" class="section-content box bg-white p-5 rounded-xl shadow-sm mb-20" style="margin-top: 20px;">
-      <h3 class="font-bold border-l-4 border-blue-900 pl-2 mb-4">📝 個人簡介</h3>
-      <div id="bioContent" style="padding: 20px; background: #f8fafc; border-radius: 8px; min-height: 200px; color: #64748b;">
-        尚未填寫個人簡介
-      </div>
+    <div id="section-bio" class="section-content box p-5 rounded-xl shadow-sm mb-20" style="margin-top: 20px;">
+      <h3 class="section-title font-bold border-l-4 pl-2 mb-4">📝 Bio</h3>
+      <div id="bioContent" class="bio-content">No bio yet.</div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div id="section-leaderboard" class="section-content box p-5 rounded-xl shadow-sm mb-20" style="margin-top: 20px;">
+      <h3 class="section-title font-bold border-l-4 pl-2 mb-4">🏅 Leaderboard</h3>
+      <div id="leaderboardList" class="text-sm">Loading...</div>
     </div>
 
   </div>
 
   <!-- 管理員面板 -->
-  <div id="adminPanel" class="box bg-white p-5 rounded-xl shadow-sm mb-20" style="display:none; margin-top: 20px; border-left: 4px solid #f59e0b;">
+  <div id="adminPanel" class="box p-5 rounded-xl shadow-sm mb-20" style="display:none; margin-top: 20px; border-left: 4px solid #f59e0b;">
     <h3 style="color:#fbbf24; font-weight: bold; margin-bottom: 20px;">🛠️ Admin Review Console</h3>
+
+    <!-- 僅超級管理員可見：管理管理員 -->
+    <div id="adminManageSection" style="display:none; margin-bottom: 24px; max-width: 100%; overflow: hidden;">
+      <h4 style="color:#fcd34d; font-weight: 600; margin-bottom: 12px;">👥 管理管理員</h4>
+      <div id="adminListContainer" style="max-width: 100%;"><p style="color:#94a3b8;">Loading...</p></div>
+      <div style="margin-top: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+        <label for="newAdminEmail" style="color:#cbd5e1;">以 Email 新增管理員：</label>
+        <input type="email" id="newAdminEmail" placeholder="user@example.com" style="padding: 8px 12px; border-radius: 8px; border: 1px solid #475569; background: #1e293b; color: #e2e8f0; min-width: 220px;" />
+        <button type="button" id="btnAddAdmin" style="padding: 8px 16px; border-radius: 8px; background: #f59e0b; color: #1e293b; font-weight: 600; border: none; cursor: pointer;">新增管理員</button>
+      </div>
+    </div>
+
+    <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
     <div id="pendingPointsList">Loading...</div>
     <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
     <div id="pendingList">Loading...</div>
@@ -416,6 +528,7 @@
 <script src="js/utils.js"></script>
 <script src="js/missions.js"></script>
 <script src="js/rewards.js"></script>
+<script src="js/leaderboard.js"></script>
 <script src="js/auth.js"></script>
 <script src="js/admin.js"></script>
 <script src="js/app.js"></script>
@@ -442,7 +555,7 @@
     // 設置對應按鈕為 active
     const buttons = document.querySelectorAll('.module-btn');
     buttons.forEach((btn, index) => {
-      const sections = ['info', 'collect', 'rewards', 'records', 'edit', 'bio'];
+      const sections = ['info', 'collect', 'rewards', 'records', 'edit', 'bio', 'leaderboard'];
       if (sections[index] === sectionId) {
         btn.classList.add('active');
       }
